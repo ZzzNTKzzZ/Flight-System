@@ -20,10 +20,10 @@ import src.View.BookingPage.Booking;
 import src.View.BookingPage.BookingDetail;
 import src.View.FlightPage.FlightCurrentPage;
 import src.View.FlightPage.FlightDetail;
+import src.View.UserPage.UserProfile;
 import src.Model.FlightDAO;
 import src.View.Home;
 import src.View.Navbar;
-import src.View.UserProfile;
 
 public class main {
 

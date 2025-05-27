@@ -16,11 +16,32 @@ public class UserController {
             Connection conn = DBConnection.getConnection();
             UserDAO userDAO = new UserDAO(conn);
             users = userDAO.getAllUser(flightId);
-            conn.close(); // Đóng kết nối sau khi dùng xong
+            conn.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return users;
     }
+    public static UserModel getUser(String flightId, String userId) {
+        UserModel user = null;
+
+        try {
+            Connection conn = DBConnection.getConnection();
+            UserDAO userDAO = new UserDAO(conn);
+            user = userDAO.getUser(flightId, userId);
+            System.out.println(user + "usercontroller");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
+
+    public static void setUser(UserModel user) {
+    try (Connection conn = DBConnection.getConnection()) {
+        UserDAO userDAO = new UserDAO(conn);
+        userDAO.setUser(user); 
+    } catch (Exception e) {
+        e.printStackTrace(); 
+    }
+}
 }

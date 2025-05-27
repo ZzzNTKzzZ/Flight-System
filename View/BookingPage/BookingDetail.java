@@ -2,10 +2,11 @@ package src.View.BookingPage;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+
 import src.main;
 import src.Controller.UserController;
-import src.View.UserProfile;
 import src.Model.UserModel;
+import src.View.UserPage.UserProfile;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -16,21 +17,25 @@ public class BookingDetail {
     public static JPanel bookingDetail = new JPanel();
     private static String flightId;
 
-    public static void setFlightId(String flightId) {
-        BookingDetail.flightId = flightId;
+    public static void setFlightId(String id) {
+        flightId = id;
+        refreshTable(); // Refresh the table when flight ID is set
     }
 
-    
+    private static JTable table;
+    private static DefaultTableModel model;
+    private static JScrollPane scrollPane;
+
     static {
         bookingDetail.setLayout(new BorderLayout());
         bookingDetail.setBackground(Color.WHITE);
         bookingDetail.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
 
-        // Back + Title layout
+        // Top panel with back and title
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(Color.WHITE);
 
-        JPanel backPanel = main.createBackPanel(() -> main.setCardLayout("home"));
+        JPanel backPanel = main.createBackPanel(() -> main.setCardLayout("flightCurrent"));
 
         JLabel title = new JLabel("Booking Details", SwingConstants.CENTER);
         title.setFont(new Font("Segoe UI", Font.BOLD, 32));
@@ -41,35 +46,31 @@ public class BookingDetail {
         topPanel.add(title, BorderLayout.CENTER);
         bookingDetail.add(topPanel, BorderLayout.NORTH);
 
-        // Table with bookingDetail data
+        // Table
+        createBookingTable();
+        scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(180, 200, 220)));
+        bookingDetail.add(scrollPane, BorderLayout.CENTER);
+    }
+
+    private static void createBookingTable() {
         String[] columns = {"Booking ID", "Passenger Name", "Flight ID", "Seat", "Date"};
+        Object[][] rowData = {};
 
-        List<UserModel> users = UserController.getAllUser(flightId); // Sửa lại nếu cần lọc theo flight
-
-        Object[][] rowData = new Object[users.size()][5];
-        for (int i = 0; i < users.size(); i++) {
-            UserModel user = users.get(i);
-            rowData[i][0] = user.getId();
-            rowData[i][1] = user.getFullName();
-            rowData[i][2] = user.getPhone(); // giả định có flight_id, có thể lấy từ ticket nếu cần
-            rowData[i][3] = user.getAge();    // giả định có seat, cần sửa lại theo ticket thực tế
-            rowData[i][4] = user.getDate(); // nhớ thêm getter cho Date nếu chưa có
-        }
-
-        DefaultTableModel model = new DefaultTableModel(rowData, columns) {
+        model = new DefaultTableModel(rowData, columns) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Không cho chỉnh sửa trực tiếp trên bảng
+                return false;
             }
         };
 
-        JTable table = new JTable(model);
+        table = new JTable(model);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         table.setRowHeight(28);
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 16));
         table.setGridColor(new Color(200, 200, 200));
 
-        // Popup menu
+        // Popup Menu
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem detailItem = new JMenuItem("Detail");
         JMenuItem editItem = new JMenuItem("Edit");
@@ -104,10 +105,9 @@ public class BookingDetail {
         detailItem.addActionListener(e -> {
             int selectedRow = table.getSelectedRow();
             if (selectedRow != -1) {
-                String bookingDetailId = table.getValueAt(selectedRow, 0).toString();
-                String seatId = table.getValueAt(selectedRow, 3).toString();
-                UserProfile.setIdFlight(bookingDetailId);
-                UserProfile.setSeatId(seatId);
+                String userId = table.getValueAt(selectedRow, 0).toString();
+                UserProfile.setIdFlight(flightId);
+                UserProfile.setUserId(userId);
                 main.setCardLayout("userProfile");
             }
         });
@@ -117,7 +117,7 @@ public class BookingDetail {
             if (selectedRow != -1) {
                 String bookingDetailId = table.getValueAt(selectedRow, 0).toString();
                 JOptionPane.showMessageDialog(bookingDetail, "Edit bookingDetail: " + bookingDetailId);
-                // Gọi hàm sửa từ controller nếu cần
+                // Call controller to edit if needed
             }
         });
 
@@ -127,13 +127,26 @@ public class BookingDetail {
                 int confirm = JOptionPane.showConfirmDialog(bookingDetail, "Delete this bookingDetail?", "Confirm", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
                     ((DefaultTableModel) table.getModel()).removeRow(selectedRow);
-                    // Gọi controller để xóa trong database nếu cần
+                    // Call controller to delete in DB if needed
                 }
             }
         });
+    }
 
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(180, 200, 220)));
-        bookingDetail.add(scrollPane, BorderLayout.CENTER);
+    public static void refreshTable() {
+        if (model == null) return;
+
+        model.setRowCount(0); // Clear old data
+
+        List<UserModel> users = UserController.getAllUser(flightId);
+        for (UserModel user : users) {
+            model.addRow(new Object[]{
+                    user.getId(),
+                    user.getFullName(),
+                    user.getPhone(),
+                    user.getAge(),
+                    user.getDate()
+            });
+        }
     }
 }

@@ -2,11 +2,8 @@ package src.View.FlightPage;
 
 import javax.swing.*;
 
-import org.w3c.dom.events.MouseEvent;
-
 import java.awt.*;
 import java.awt.event.MouseAdapter;
-import java.awt.event.MouseListener;
 import java.sql.SQLException;
 import java.util.List;
 import java.text.SimpleDateFormat;
@@ -114,7 +111,6 @@ public class FlightCurrentPage {
     try {
         scrollPane = new JScrollPane(flightList());
     } catch (SQLException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
     }
     scrollPane.setBorder(null);
