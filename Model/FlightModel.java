@@ -10,6 +10,10 @@ public class FlightModel {
     private Date arrival;
     private FlightStatus status; // Use enum
     private int seatAvailable;
+    // Default Constructor
+    public FlightModel() {
+        
+    }
 
     // Constructor
     public FlightModel(String id, String from, String to, Date departure, Date arrival, FlightStatus status,

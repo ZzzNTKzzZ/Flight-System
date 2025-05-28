@@ -20,8 +20,9 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import src.main;
-import src.Controller.searchController;
+import src.Controller.FlightController;
 import src.Model.FlightModel;
+import src.Model.TripModel;  // Make sure this import exists
 import src.View.FlightPage.FlightDetail;
 
 public class Booking {
@@ -52,7 +53,7 @@ public class Booking {
         JPanel form = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         form.setBackground(Color.WHITE);
 
-        String[] labels = { "From", "To", "Departure", "Arrival" };
+        String[] labels = { "From", "To", "Departure", "Return" };
         JTextField[] fields = new JTextField[labels.length];
 
         for (int i = 0; i < labels.length; i++) {
@@ -98,19 +99,14 @@ public class Booking {
         button.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 
         button.addActionListener(e -> {
-            List<FlightModel> list = searchController.getListFlight(
-                /*
-                fields[0].getText(),
-                fields[1].getText(),
-                fields[2].getText(),
-                fields[3].getText()
-                 */
-                // Input
-                
-            );
+            String from = fields[0].getText();
+            String to = fields[1].getText();
+            String departure = fields[2].getText();
+            String returnDate = fields[3].getText();
 
+            List<TripModel> trips = FlightController.searchFlight(from, to, departure, returnDate);
             listPanel.removeAll();
-            updateListPanel(list);
+            updateListPanel(trips);
             listPanel.revalidate();
             listPanel.repaint();
         });
@@ -118,24 +114,30 @@ public class Booking {
         return button;
     }
 
-    private static void updateListPanel(List<FlightModel> list) {
+    private static void updateListPanel(List<TripModel> trips) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy HH:mm");
 
-        for (FlightModel flight : list) {
-            JPanel flightCard = new JPanel(new BorderLayout());
-            flightCard.setBackground(new Color(240, 248, 255));
-            flightCard.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(new Color(100, 149, 237), 1),
-                    BorderFactory.createEmptyBorder(10, 15, 10, 15)
-            ));
-            flightCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
+        for (TripModel trip : trips) {
+            FlightModel outbound = trip.getOutbound();
+            FlightModel returnFlight = trip.getReturnFlight();
 
-            JLabel infoLabel = new JLabel("<html>"
-                    + "<b>Flight ID:</b> " + flight.getId() + "<br>"
-                    + "<b>From:</b> " + flight.getFrom() + " → "
-                    + "<b>To:</b> " + flight.getTo() + "<br>"
-                    + "<b>Time:</b> " + sdf.format(flight.getDeparture()) + " - " + sdf.format(flight.getArrival())
-                    + "</html>");
+            JPanel tripCard = new JPanel(new BorderLayout());
+            tripCard.setBackground(new Color(240, 248, 255));
+            tripCard.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(100, 149, 237), 1),
+                    BorderFactory.createEmptyBorder(10, 15, 10, 15)));
+            tripCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 140));  // Taller for two flights
+
+            String infoHtml = "<html>" +
+                    "<b>Outbound Flight:</b> " + outbound.getFrom() + " → " + outbound.getTo() + "<br>" +
+                    "<b>Departure:</b> " + sdf.format(outbound.getDeparture()) + " | " +
+                    "<b>Arrival:</b> " + sdf.format(outbound.getArrival()) + "<br><br>" +
+                    "<b>Return Flight:</b> " + returnFlight.getFrom() + " → " + returnFlight.getTo() + "<br>" +
+                    "<b>Departure:</b> " + sdf.format(returnFlight.getDeparture()) + " | " +
+                    "<b>Arrival:</b> " + sdf.format(returnFlight.getArrival()) +
+                    "</html>";
+
+            JLabel infoLabel = new JLabel(infoHtml);
             infoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
 
             JButton bookingBtn = new JButton("Booking");
@@ -145,16 +147,18 @@ public class Booking {
             bookingBtn.setBackground(new Color(70, 130, 180));
             bookingBtn.setForeground(Color.WHITE);
             bookingBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            bookingBtn.addActionListener(e -> {
-                FlightDetail.setFlight(flight);
+
+            bookingBtn.addActionListener(ev -> {
+                FlightDetail.setOutboundFlight(outbound);
+                FlightDetail.setReturnFlight(returnFlight);
                 main.setCardLayout("flightDetail");
             });
 
-            flightCard.add(infoLabel, BorderLayout.CENTER);
-            flightCard.add(bookingBtn, BorderLayout.EAST);
+            tripCard.add(infoLabel, BorderLayout.CENTER);
+            tripCard.add(bookingBtn, BorderLayout.EAST);
 
             listPanel.add(Box.createVerticalStrut(10)); // spacing
-            listPanel.add(flightCard);
+            listPanel.add(tripCard);
         }
     }
 }
