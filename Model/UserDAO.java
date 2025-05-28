@@ -51,7 +51,13 @@ public class UserDAO {
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setDate(1, user.getDate());
         stmt.setString(2, user.getFullName());
-        stmt.setString(3, user.getGender());
+        String gender = user.getGender();
+        if (gender.equalsIgnoreCase("Male")) {
+            gender = "M";
+        } else if (gender.equalsIgnoreCase("Female")) {
+            gender = "F";
+        }
+        stmt.setString(3, gender);
         stmt.setInt(4, user.getAge());
         stmt.setString(5, user.getPhone());
         stmt.setString(6, user.getId());
@@ -62,9 +68,9 @@ public class UserDAO {
 
     public UserModel getUser(String flightId, String userId) throws SQLException {
         String sql = "SELECT u.* " +
-             "FROM Ticket t " +
-             "JOIN User u ON t.UserId = u.Id " +
-             "WHERE t.FlightId = ? AND t.UserId = ?";
+                "FROM Ticket t " +
+                "JOIN User u ON t.UserId = u.Id " +
+                "WHERE t.FlightId = ? AND t.UserId = ?";
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setString(1, flightId);
         stmt.setString(2, userId);

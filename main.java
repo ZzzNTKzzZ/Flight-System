@@ -15,7 +15,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import src.View.newFlight;
+import src.View.NewFlight;
 import src.View.BookingPage.Booking;
 import src.View.BookingPage.BookingDetail;
 import src.View.FlightPage.FlightCurrentPage;
@@ -53,7 +53,7 @@ public class main {
         // Add cards to cardPanel with a name
         cardPanel.add(Home.home, "home");
         cardPanel.add(FlightCurrentPage.flightCurrentPage, "flightCurrent");
-        cardPanel.add(newFlight.newFlightPage, "newFlight");
+        cardPanel.add(NewFlight.newFlightPage, "newFlight");
         cardPanel.add(BookingDetail.bookingDetail, "bookingDetail");
         cardPanel.add(UserProfile.userProfilePage, "userProfile");
         cardPanel.add(Booking.booking, "booking");

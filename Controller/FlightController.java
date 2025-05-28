@@ -23,4 +23,33 @@ public class FlightController {
         return flights;
     }
 
+    public static void createNewFlights(FlightModel flight) {
+        try {
+            Connection conn = DBConnection.getConnection();
+            FlightDAO flightDAO = new FlightDAO(conn);
+            flightDAO.createNewFlight(flight);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void deleteFlight(String flightId) {
+        try {
+            Connection conn = DBConnection.getConnection();
+            FlightDAO flightDAO = new FlightDAO(conn);
+            flightDAO.deleteFlight(flightId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateFlight(FlightModel flight) {
+        try {
+            Connection conn = DBConnection.getConnection();
+            FlightDAO flightDAO = new FlightDAO(conn);
+            flightDAO.updateFlight(flight);
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+    }
 }

@@ -29,7 +29,6 @@ public class UserController {
             Connection conn = DBConnection.getConnection();
             UserDAO userDAO = new UserDAO(conn);
             user = userDAO.getUser(flightId, userId);
-            System.out.println(user + "usercontroller");
         } catch (Exception e) {
             e.printStackTrace();
         }
