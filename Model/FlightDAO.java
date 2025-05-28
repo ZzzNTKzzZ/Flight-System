@@ -1,6 +1,8 @@
 package src.Model;
 
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,44 +83,58 @@ public class FlightDAO {
         return rowsUpdated > 0;
     }
 
-    public List<TripModel> searchFlight(String from, String to, String departure, String returnDate)
-            throws SQLException {
+    public List<TripModel> searchFlight(String from, String to, String departure, String returnDate) throws Exception {
         List<TripModel> flights = new ArrayList<>();
 
-        String sql = "SELECT \n" +
-                "    outbound.Id AS OutboundId,\n" +
-                "    outbound.`From` AS OutboundFrom,\n" +
-                "    outbound.`To` AS OutboundTo,\n" +
-                "    outbound.Departure AS OutboundDeparture,\n" +
-                "    outbound.Arrival AS OutboundArrival,\n" +
-                "    outbound.Status AS OutboundStatus,\n" +
-                "    outbound.SeatAvailable AS OutboundSeatAvailable,\n" +
-                "    returnF.Id AS ReturnId,\n" +
-                "    returnF.Departure AS ReturnDeparture,\n" +
-                "    returnF.Arrival AS ReturnArrival,\n" +
-                "    returnF.Status AS ReturnStatus,\n" +
-                "    returnF.SeatAvailable AS ReturnSeatAvailable\n" +
-                "FROM Flight outbound\n" +
-                "JOIN Flight returnF \n" +
-                "    ON outbound.`From` = returnF.`To`\n" +
-                "   AND outbound.`To` = returnF.`From`\n" +
-                "   AND returnF.Departure > outbound.Arrival\n" +
-                "WHERE outbound.`From` = ?\n" +
-                "  AND outbound.`To` = ?\n" +
-                "  AND returnF.`From` = ?\n" +
-                "  AND returnF.`To` = ?\n" +
-                "  AND DATE(outbound.Departure) = ?\n" +
-                "  AND DATE(returnF.Departure) = ?\n" +
-                "  AND outbound.Status = 'Scheduled'\n" +
-                "  AND returnF.Status = 'Scheduled'\n" +
+        // SQL query with join to find matching outbound and return flights
+        String sql = "SELECT " +
+                "    outbound.Id AS OutboundId, " +
+                "    outbound.`From` AS OutboundFrom, " +
+                "    outbound.`To` AS OutboundTo, " +
+                "    outbound.Departure AS OutboundDeparture, " +
+                "    outbound.Arrival AS OutboundArrival, " +
+                "    outbound.Status AS OutboundStatus, " +
+                "    outbound.SeatAvailable AS OutboundSeatAvailable, " +
+                "    returnF.Id AS ReturnId, " +
+                "    returnF.Departure AS ReturnDeparture, " +
+                "    returnF.Arrival AS ReturnArrival, " +
+                "    returnF.Status AS ReturnStatus, " +
+                "    returnF.SeatAvailable AS ReturnSeatAvailable " +
+                "FROM Flight outbound " +
+                "JOIN Flight returnF ON outbound.`From` = returnF.`To` " +
+                "    AND outbound.`To` = returnF.`From` " +
+                "    AND returnF.Departure > outbound.Arrival " +
+                "WHERE outbound.`From` = ? " +
+                "  AND outbound.`To` = ? " +
+                "  AND returnF.`From` = ? " +
+                "  AND returnF.`To` = ? " +
+                "  AND DATE(outbound.Departure) = ? " +
+                "  AND DATE(returnF.Departure) = ? " +
+                "  AND outbound.Status = 'Scheduled' " +
+                "  AND returnF.Status = 'Scheduled' " +
                 "ORDER BY outbound.Id, returnF.Departure";
+
         PreparedStatement stmt = conn.prepareStatement(sql);
+
+        // Parse input dates and print them for debugging
+        java.sql.Date depSqlDate = parseAndPrintDate(departure);
+        java.sql.Date retSqlDate = parseAndPrintDate(returnDate);
+
+        // Bind parameters with debug print
+        System.out.println("Setting SQL parameters:");
+        System.out.println("1: from = " + from);
+        System.out.println("2: to = " + to);
+        System.out.println("3: to (return from) = " + to);
+        System.out.println("4: from (return to) = " + from);
+        System.out.println("5: departure date = " + depSqlDate);
+        System.out.println("6: return date = " + retSqlDate);
+
         stmt.setString(1, from);
         stmt.setString(2, to);
         stmt.setString(3, to);
         stmt.setString(4, from);
-        stmt.setString(5, departure);
-        stmt.setString(6, returnDate);
+        stmt.setDate(5, depSqlDate);
+        stmt.setDate(6, retSqlDate);
 
         ResultSet rs = stmt.executeQuery();
 
@@ -144,8 +160,34 @@ public class FlightDAO {
             flights.add(new TripModel(outbound, returnFlight));
         }
 
+        rs.close();
+        stmt.close();
+
+        System.out.println("Flights found: " + flights.size());
         return flights;
     }
+
+    public FlightModel searchFlight(String flightId) throws SQLException {
+    String sql = "SELECT * FROM flight WHERE id = ?";
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setString(1, flightId);
+        ResultSet rs = stmt.executeQuery();
+
+        if (rs.next()) {
+            FlightModel flight = new FlightModel();
+            flight.setId(rs.getString("Id"));
+            flight.setFrom(rs.getString("From"));
+            flight.setTo(rs.getString("To"));
+            flight.setDeparture(rs.getTimestamp("Departure"));
+            flight.setArrival(rs.getTimestamp("Arrival"));
+            flight.setStatus(FlightStatus.valueOf(rs.getString("Status")));
+            flight.setSeatAvailable(rs.getInt("SeatAvailable"));
+            return flight;
+        } else {
+            return null; // No flight found
+        }
+    }
+}
 
     public List<String> getFromFlight() throws SQLException {
         List<String> fromList = new ArrayList<>();
@@ -171,4 +213,12 @@ public class FlightDAO {
 
         return toList;
     }
+    private java.sql.Date parseAndPrintDate(String dateStr) throws ParseException {
+        SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+        java.util.Date utilDate = inputFormat.parse(dateStr);
+        java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+        System.out.println("Parsed date string '" + dateStr + "' as SQL Date: " + sqlDate);
+        return sqlDate;
+    }
+
 }

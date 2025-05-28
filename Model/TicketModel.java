@@ -4,15 +4,15 @@ public class TicketModel {
     private String ticketId;
     private UserModel user;
     private FlightModel flight;
-    private String seatNumber;
+    private SeatModel seat;
     private double price;
 
     // Constructor
-    public TicketModel(String ticketId, UserModel user, FlightModel flight, String seatNumber, double price) {
+    public TicketModel(String ticketId, UserModel user, FlightModel flight, SeatModel seat, double price) {
         this.ticketId = ticketId;
         this.user = user;
         this.flight = flight;
-        this.seatNumber = seatNumber;
+        this.seat = seat;
         this.price = price;
     }
 
@@ -25,11 +25,11 @@ public class TicketModel {
         this.ticketId = ticketId;
     }
 
-    public UserModel getPassenger() {
+    public UserModel getUser() {
         return user;
     }
 
-    public void setPassenger(UserModel user) {
+    public void setUser(UserModel user) {
         this.user = user;
     }
 
@@ -41,12 +41,12 @@ public class TicketModel {
         this.flight = flight;
     }
 
-    public String getSeatNumber() {
-        return seatNumber;
+    public SeatModel getSeat() {
+        return seat;
     }
 
-    public void setSeatNumber(String seatNumber) {
-        this.seatNumber = seatNumber;
+    public void setSeat(SeatModel seat) {
+        this.seat = seat;
     }
 
     public double getPrice() {
@@ -63,7 +63,7 @@ public class TicketModel {
         return "Ticket ID: " + ticketId + "\n" +
                "Passenger Info:\n" + user + "\n\n" +
                "Flight Info:\n" + flight + "\n" +
-               "Seat Number: " + seatNumber + "\n" +
+               "Seat Info: " + seat + "\n" +
                "Price: $" + price;
     }
 }

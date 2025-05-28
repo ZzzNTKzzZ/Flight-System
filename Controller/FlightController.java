@@ -63,7 +63,7 @@ public class FlightController {
 
     public static List<TripModel> searchFlight(String from, String to, String departure, String returnDate) {
         List<TripModel> flights = new ArrayList<>();
-
+        
         // Trim and validate inputs
         if (from == null || to == null || departure == null || returnDate == null ||
                 from.trim().isEmpty() || to.trim().isEmpty() ||
@@ -147,5 +147,20 @@ public class FlightController {
         }
 
         return toList;
+    }
+
+    public static FlightModel getFlight(String flightId) {
+        FlightModel flight = new FlightModel();
+
+        try {
+            Connection conn = DBConnection.getConnection();
+            FlightDAO flightDAO = new FlightDAO(conn);
+            flight = flightDAO.searchFlight(flightId);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return flight;
     }
 }

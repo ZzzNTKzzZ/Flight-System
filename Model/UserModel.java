@@ -9,6 +9,10 @@ public class UserModel {
     private String gender; // 'M' or 'F'
     private int age;
     private String phone;
+    
+    public UserModel() {
+        
+    }
 
     // Constructor
     public UserModel(String id, Date date, String fullName, String gender, int age, String phone) {

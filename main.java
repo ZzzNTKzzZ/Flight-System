@@ -17,6 +17,7 @@ import javax.swing.JTextField;
 
 import src.View.NewFlight;
 import src.View.BookingPage.Booking;
+import src.View.BookingPage.BookingConfirmation;
 import src.View.BookingPage.BookingDetail;
 import src.View.FlightPage.FlightCurrentPage;
 import src.View.FlightPage.FlightDetail;
@@ -58,6 +59,7 @@ public class main {
         cardPanel.add(UserProfile.userProfilePage, "userProfile");
         cardPanel.add(Booking.booking, "booking");
         cardPanel.add(FlightDetail.flightDetail, "flightDetail");
+        cardPanel.add(BookingConfirmation.bookingConfirmation, "bookingConfirmation");
         frame.setSize(1300, 675);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);

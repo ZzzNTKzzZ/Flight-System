@@ -34,7 +34,27 @@ public class UserController {
         }
         return user;
     }
+    public static UserModel getUser(String userId) {
+        UserModel user = null;
 
+        try {
+            Connection conn = DBConnection.getConnection();
+            UserDAO userDAO = new UserDAO(conn);
+            user = userDAO.getUser(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
+    public static void createUser(UserModel user) {
+        try {
+            Connection conn = DBConnection.getConnection();
+            UserDAO userDAO = new UserDAO(conn);
+            userDAO.createUser(user);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     public static void setUser(UserModel user) {
     try (Connection conn = DBConnection.getConnection()) {
         UserDAO userDAO = new UserDAO(conn);

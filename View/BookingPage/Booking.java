@@ -14,6 +14,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -55,7 +56,7 @@ public class Booking {
         form.setBackground(Color.WHITE);
 
         String[] labels = { "From", "To", "Departure", "Return" };
-        JTextField[] fields = new JTextField[labels.length];
+        JComponent[] fields = new JComponent[labels.length];
 
         List<String> fromSuggestions = FlightController.getFlightFrom();
         List<String> toSuggestions = FlightController.getFligthTo();
@@ -75,8 +76,7 @@ public class Booking {
                 pairPanel.add(label);
                 pairPanel.add(fromComboBox);
                 form.add(pairPanel);
-                fields[index] = new JTextField();
-                fromComboBox.addActionListener(e -> fields[index].setText((String) fromComboBox.getSelectedItem()));
+                fields[index] = fromComboBox;
             } else if (index == 1) { // To
                 JComboBox<String> toComboBox = new JComboBox<>(toSuggestions.toArray(new String[0]));
                 toComboBox.setPreferredSize(new Dimension(100, 25));
@@ -84,8 +84,7 @@ public class Booking {
                 pairPanel.add(label);
                 pairPanel.add(toComboBox);
                 form.add(pairPanel);
-                fields[index] = new JTextField();
-                toComboBox.addActionListener(e -> fields[index].setText((String) toComboBox.getSelectedItem()));
+                fields[index] = toComboBox;
             } else {
                 JTextField field = new JTextField(8);
                 field.setFont(new Font("Segoe UI", Font.PLAIN, 16));
@@ -112,7 +111,7 @@ public class Booking {
         booking.add(scrollPane, BorderLayout.SOUTH);
     }
 
-    private static JButton createSearchButton(JTextField[] fields) {
+    private static JButton createSearchButton(JComponent[] fields) {
         JButton button = new JButton("Search");
         button.setFont(new Font("Segoe UI", Font.BOLD, 16));
         button.setBackground(new Color(30, 144, 255));
@@ -121,12 +120,15 @@ public class Booking {
         button.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 
         button.addActionListener(e -> {
-            String from = fields[0].getText();
-            String to = fields[1].getText();
-            String departure = fields[2].getText();
-            String returnDate = fields[3].getText();
+            String from = (String) ((JComboBox<?>) fields[0]).getSelectedItem();
+            String to = (String) ((JComboBox<?>) fields[1]).getSelectedItem();
+            String departure = ((JTextField) fields[2]).getText();
+            String returnDate = ((JTextField) fields[3]).getText();
+
+            System.out.println("From: " + from + ", To: " + to + ", Departure: " + departure + ", Return: " + returnDate);
 
             List<TripModel> trips = FlightController.searchFlight(from, to, departure, returnDate);
+            System.out.println(trips);
             listPanel.removeAll();
             updateListPanel(trips);
             listPanel.revalidate();

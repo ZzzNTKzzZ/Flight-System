@@ -5,6 +5,7 @@ import java.awt.*;
 import java.text.SimpleDateFormat;
 
 import src.Model.FlightModel;
+import src.View.BookingPage.BookingConfirmation;
 import src.main;
 
 public class FlightDetail {
@@ -106,9 +107,7 @@ public class FlightDetail {
         continueButton.setPreferredSize(new Dimension(250, 40));
 
         continueButton.addActionListener(e -> {
-            System.out.println("Continue booking clicked for flights:");
-            System.out.println("Outbound: " + (outboundFlight != null ? outboundFlight.getId() : "N/A"));
-            System.out.println("Return: " + (returnFlight != null ? returnFlight.getId() : "N/A"));
+            BookingConfirmation.setFlightFrom(outboundFlight.getId());            
             main.setCardLayout("bookingConfirmation");
         });
 
