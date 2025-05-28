@@ -13,6 +13,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -22,7 +23,7 @@ import javax.swing.SwingConstants;
 import src.main;
 import src.Controller.FlightController;
 import src.Model.FlightModel;
-import src.Model.TripModel;  // Make sure this import exists
+import src.Model.TripModel;
 import src.View.FlightPage.FlightDetail;
 
 public class Booking {
@@ -56,22 +57,43 @@ public class Booking {
         String[] labels = { "From", "To", "Departure", "Return" };
         JTextField[] fields = new JTextField[labels.length];
 
+        List<String> fromSuggestions = FlightController.getFlightFrom();
+        List<String> toSuggestions = FlightController.getFligthTo();
+
         for (int i = 0; i < labels.length; i++) {
+            final int index = i; // Ensure effectively final for lambda
             JPanel pairPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
             pairPanel.setBackground(Color.WHITE);
 
             JLabel label = new JLabel(labels[i] + ":");
             label.setFont(new Font("Segoe UI", Font.PLAIN, 16));
 
-            JTextField field = new JTextField(8);
-            field.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-
-            pairPanel.add(label);
-            pairPanel.add(field);
-            pairPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
-
-            form.add(pairPanel);
-            fields[i] = field;
+            if (index == 0) { // From
+                JComboBox<String> fromComboBox = new JComboBox<>(fromSuggestions.toArray(new String[0]));
+                fromComboBox.setPreferredSize(new Dimension(100, 25));
+                fromComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+                pairPanel.add(label);
+                pairPanel.add(fromComboBox);
+                form.add(pairPanel);
+                fields[index] = new JTextField();
+                fromComboBox.addActionListener(e -> fields[index].setText((String) fromComboBox.getSelectedItem()));
+            } else if (index == 1) { // To
+                JComboBox<String> toComboBox = new JComboBox<>(toSuggestions.toArray(new String[0]));
+                toComboBox.setPreferredSize(new Dimension(100, 25));
+                toComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+                pairPanel.add(label);
+                pairPanel.add(toComboBox);
+                form.add(pairPanel);
+                fields[index] = new JTextField();
+                toComboBox.addActionListener(e -> fields[index].setText((String) toComboBox.getSelectedItem()));
+            } else {
+                JTextField field = new JTextField(8);
+                field.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+                pairPanel.add(label);
+                pairPanel.add(field);
+                fields[index] = field;
+                form.add(pairPanel);
+            }
         }
 
         JButton searchButton = createSearchButton(fields);
@@ -126,7 +148,7 @@ public class Booking {
             tripCard.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(new Color(100, 149, 237), 1),
                     BorderFactory.createEmptyBorder(10, 15, 10, 15)));
-            tripCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 140));  // Taller for two flights
+            tripCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 140));
 
             String infoHtml = "<html>" +
                     "<b>Outbound Flight:</b> " + outbound.getFrom() + " → " + outbound.getTo() + "<br>" +
@@ -157,7 +179,7 @@ public class Booking {
             tripCard.add(infoLabel, BorderLayout.CENTER);
             tripCard.add(bookingBtn, BorderLayout.EAST);
 
-            listPanel.add(Box.createVerticalStrut(10)); // spacing
+            listPanel.add(Box.createVerticalStrut(10));
             listPanel.add(tripCard);
         }
     }

@@ -10,18 +10,15 @@ import src.main;
 public class FlightDetail {
     public static JPanel flightDetail = new JPanel();
 
-    // Store outbound and return flights
     private static FlightModel outboundFlight;
     private static FlightModel returnFlight;
 
-    // Declare labels for outbound flight
     private static JLabel outboundFlightIdLabel;
     private static JLabel outboundFromLabel;
     private static JLabel outboundToLabel;
     private static JLabel outboundDepartureLabel;
     private static JLabel outboundArrivalLabel;
 
-    // Declare labels for return flight
     private static JLabel returnFlightIdLabel;
     private static JLabel returnFromLabel;
     private static JLabel returnToLabel;
@@ -33,10 +30,9 @@ public class FlightDetail {
         flightDetail.setBackground(Color.WHITE);
         flightDetail.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
 
-        // Top bar with back button and title
+        // Top Panel
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(Color.WHITE);
-
         JPanel backPanel = main.createBackPanel(() -> main.setCardLayout("booking"));
 
         JLabel title = new JLabel("Flight Details", SwingConstants.CENTER);
@@ -48,45 +44,55 @@ public class FlightDetail {
         topPanel.add(title, BorderLayout.CENTER);
         flightDetail.add(topPanel, BorderLayout.NORTH);
 
-        // Info panel with BoxLayout (vertical)
-        JPanel infoPanel = new JPanel();
-        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-        infoPanel.setBackground(Color.WHITE);
+        // Center Panel - Side-by-side layout
+        JPanel centerPanel = new JPanel(new GridLayout(1, 2, 40, 0));
+        centerPanel.setBackground(Color.WHITE);
 
         Font labelFont = new Font("Segoe UI", Font.PLAIN, 20);
         Color textColor = new Color(50, 50, 80);
 
-        // Outbound flight labels
+        // --- Outbound Flight Panel ---
+        JPanel outboundPanel = new JPanel();
+        outboundPanel.setLayout(new BoxLayout(outboundPanel, BoxLayout.Y_AXIS));
+        outboundPanel.setBackground(Color.WHITE);
+        outboundPanel.setBorder(BorderFactory.createTitledBorder("Outbound Flight"));
+
         outboundFlightIdLabel = createInfoLabel("Outbound Flight ID: ", labelFont, textColor);
         outboundFromLabel = createInfoLabel("From: ", labelFont, textColor);
         outboundToLabel = createInfoLabel("To: ", labelFont, textColor);
         outboundDepartureLabel = createInfoLabel("Departure: ", labelFont, textColor);
         outboundArrivalLabel = createInfoLabel("Arrival: ", labelFont, textColor);
 
-        infoPanel.add(outboundFlightIdLabel);
-        infoPanel.add(outboundFromLabel);
-        infoPanel.add(outboundToLabel);
-        infoPanel.add(outboundDepartureLabel);
-        infoPanel.add(outboundArrivalLabel);
+        outboundPanel.add(outboundFlightIdLabel);
+        outboundPanel.add(outboundFromLabel);
+        outboundPanel.add(outboundToLabel);
+        outboundPanel.add(outboundDepartureLabel);
+        outboundPanel.add(outboundArrivalLabel);
 
-        infoPanel.add(Box.createVerticalStrut(30)); // space between outbound and return
+        // --- Return Flight Panel ---
+        JPanel returnPanel = new JPanel();
+        returnPanel.setLayout(new BoxLayout(returnPanel, BoxLayout.Y_AXIS));
+        returnPanel.setBackground(Color.WHITE);
+        returnPanel.setBorder(BorderFactory.createTitledBorder("Return Flight"));
 
-        // Return flight labels
         returnFlightIdLabel = createInfoLabel("Return Flight ID: ", labelFont, textColor);
         returnFromLabel = createInfoLabel("From: ", labelFont, textColor);
         returnToLabel = createInfoLabel("To: ", labelFont, textColor);
         returnDepartureLabel = createInfoLabel("Departure: ", labelFont, textColor);
         returnArrivalLabel = createInfoLabel("Arrival: ", labelFont, textColor);
 
-        infoPanel.add(returnFlightIdLabel);
-        infoPanel.add(returnFromLabel);
-        infoPanel.add(returnToLabel);
-        infoPanel.add(returnDepartureLabel);
-        infoPanel.add(returnArrivalLabel);
+        returnPanel.add(returnFlightIdLabel);
+        returnPanel.add(returnFromLabel);
+        returnPanel.add(returnToLabel);
+        returnPanel.add(returnDepartureLabel);
+        returnPanel.add(returnArrivalLabel);
 
-        flightDetail.add(infoPanel, BorderLayout.CENTER);
+        // Add both panels to center
+        centerPanel.add(outboundPanel);
+        centerPanel.add(returnPanel);
+        flightDetail.add(centerPanel, BorderLayout.CENTER);
 
-        // Add Continue to Booking button panel at the bottom
+        // Bottom Button
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         bottomPanel.setBackground(Color.WHITE);
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
@@ -99,18 +105,11 @@ public class FlightDetail {
         continueButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         continueButton.setPreferredSize(new Dimension(250, 40));
 
-        // Add action listener for the button
         continueButton.addActionListener(e -> {
-            // Here you can implement the next step of your booking process
-            // For example, open booking form or confirmation page
-            // For now, just print to console and switch to booking confirmation panel (example)
-
             System.out.println("Continue booking clicked for flights:");
             System.out.println("Outbound: " + (outboundFlight != null ? outboundFlight.getId() : "N/A"));
             System.out.println("Return: " + (returnFlight != null ? returnFlight.getId() : "N/A"));
-
-            // TODO: Replace with your booking confirmation or form panel navigation
-            main.setCardLayout("bookingConfirmation"); // example panel name
+            main.setCardLayout("bookingConfirmation");
         });
 
         bottomPanel.add(continueButton);
@@ -121,11 +120,10 @@ public class FlightDetail {
         JLabel label = new JLabel(text);
         label.setFont(font);
         label.setForeground(color);
-        label.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         return label;
     }
 
-    // Update all labels when flights are set
     private static void updateLabels() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy HH:mm");
 
