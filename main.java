@@ -22,6 +22,7 @@ import src.View.BookingPage.BookingDetail;
 import src.View.FlightPage.FlightCurrentPage;
 import src.View.FlightPage.FlightDetail;
 import src.View.UserPage.UserProfile;
+import src.View.UserPage.UserTicketsListPanel;
 import src.Model.FlightDAO;
 import src.View.Home;
 import src.View.Navbar;
@@ -60,6 +61,7 @@ public class main {
         cardPanel.add(Booking.booking, "booking");
         cardPanel.add(FlightDetail.flightDetail, "flightDetail");
         cardPanel.add(BookingConfirmation.bookingConfirmation, "bookingConfirmation");
+        cardPanel.add(UserTicketsListPanel.userProfileListPage, "listProfile");
         frame.setSize(1300, 675);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);

@@ -167,27 +167,55 @@ public class FlightDAO {
         return flights;
     }
 
-    public FlightModel searchFlight(String flightId) throws SQLException {
-    String sql = "SELECT * FROM flight WHERE id = ?";
-    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-        stmt.setString(1, flightId);
-        ResultSet rs = stmt.executeQuery();
+    public List<TripModel> searchFlightOneWay(String from, String to, String departureDate) {
+        List<TripModel> flights = new ArrayList<>();
+        String sql = "SELECT * FROM Flight WHERE `from` = ? AND `to` = ? AND DATE(`departure`) = ?";
 
-        if (rs.next()) {
-            FlightModel flight = new FlightModel();
-            flight.setId(rs.getString("Id"));
-            flight.setFrom(rs.getString("From"));
-            flight.setTo(rs.getString("To"));
-            flight.setDeparture(rs.getTimestamp("Departure"));
-            flight.setArrival(rs.getTimestamp("Arrival"));
-            flight.setStatus(FlightStatus.valueOf(rs.getString("Status")));
-            flight.setSeatAvailable(rs.getInt("SeatAvailable"));
-            return flight;
-        } else {
-            return null; // No flight found
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, from);
+            stmt.setString(2, to);
+            stmt.setString(3, departureDate);
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                FlightModel flight = new FlightModel();
+                flight.setId(rs.getString("Id"));
+                flight.setFrom(rs.getString("From"));
+                flight.setTo(rs.getString("To"));
+                flight.setDeparture(rs.getTimestamp("Departure"));
+                flight.setArrival(rs.getTimestamp("Arrival"));
+                flight.setStatus(FlightStatus.valueOf(rs.getString("Status")));
+                flight.setSeatAvailable(rs.getInt("SeatAvailable"));
+
+                flights.add(new TripModel(flight, null)); // returnFlight = null for one-way
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return flights;
+    }
+
+    public FlightModel searchFlight(String flightId) throws SQLException {
+        String sql = "SELECT * FROM flight WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, flightId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                FlightModel flight = new FlightModel();
+                flight.setId(rs.getString("Id"));
+                flight.setFrom(rs.getString("From"));
+                flight.setTo(rs.getString("To"));
+                flight.setDeparture(rs.getTimestamp("Departure"));
+                flight.setArrival(rs.getTimestamp("Arrival"));
+                flight.setStatus(FlightStatus.valueOf(rs.getString("Status")));
+                flight.setSeatAvailable(rs.getInt("SeatAvailable"));
+                return flight;
+            } else {
+                return null;
+            }
         }
     }
-}
 
     public List<String> getFromFlight() throws SQLException {
         List<String> fromList = new ArrayList<>();
@@ -213,6 +241,7 @@ public class FlightDAO {
 
         return toList;
     }
+
     private java.sql.Date parseAndPrintDate(String dateStr) throws ParseException {
         SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
         java.util.Date utilDate = inputFormat.parse(dateStr);

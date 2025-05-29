@@ -9,10 +9,12 @@ import java.util.Date;
 
 import src.main;
 import src.Controller.FlightController;
+import src.Controller.FlightSeatController;
 import src.Controller.SeatController;
 import src.Controller.TicketController;
 import src.Controller.UserController;  // Make sure this exists
 import src.Model.FlightModel;
+import src.Model.FlightSeatModel;
 import src.Model.SeatModel;
 import src.Model.TicketModel;
 import src.Model.UserModel;
@@ -191,6 +193,7 @@ public class BookingConfirmation {
     String seatClass = (String) seatClassBox.getSelectedItem();
     String userId = userIdField.getText().trim();
 
+    // Validate inputs
     if (userId.isEmpty()) {
         JOptionPane.showMessageDialog(null, "User ID is missing.", "Input Error", JOptionPane.ERROR_MESSAGE);
         return;
@@ -219,26 +222,55 @@ public class BookingConfirmation {
     String dateStr = sdf.format(date);
 
     try {
-        Date utilDate = sdf.parse(dateStr);
-        java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+        java.sql.Date sqlDate = new java.sql.Date(sdf.parse(dateStr).getTime());
 
-        UserModel existingUser = UserController.getUserById(userId);
-        if (existingUser == null) {
-            // New user - create and save
-            UserModel newUser = new UserModel(userId, sqlDate, fullName, gender, age, phone);
-            UserController.createUser(newUser);
-        } else {
-            // Optionally, update existing user info here if needed
-            // existingUser.setFullName(fullName);
-            // UserController.updateUser(existingUser);
+        // Check user existence
+        UserModel user = UserController.getUser(userId);
+        if (user == null) {
+            user = new UserModel(userId, sqlDate, fullName, gender, age, phone);
+            UserController.createUser(user);
         }
 
+        // Get flight info
         FlightModel flight = FlightController.getFlight(flightIdFrom);
-        SeatModel seat = SeatController.getSeat(flightIdFrom);
-        TicketModel ticket = new TicketModel(userId, existingUser == null ? newUser : existingUser, flight, seat, age);
+        if (flight == null) {
+            JOptionPane.showMessageDialog(null, "Flight not found.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-        // TicketController.saveTicket(ticket); // Uncomment when implemented
+        // Get available seats for this flight with matching class and available status
 
+        // This method should find a seat that matches flightId, seatClass, and status "Available"
+        FlightSeatModel availableFlightSeat = FlightSeatController.getAvailableSeatByClass(flight.getId(), seatClass);
+
+        if (availableFlightSeat == null) {
+            JOptionPane.showMessageDialog(null, "No available seats in selected class.", "Booking Failed", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Get seat info by seatId from SeatController
+        SeatModel seat = SeatController.getSeat(availableFlightSeat.getFlightId());
+        if (seat == null) {
+            JOptionPane.showMessageDialog(null, "Seat info not found.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Calculate price (you can also just get price from seat.getPrice())
+        double price = seat.getPrice();
+
+        // Generate ticket id
+        String ticketId = java.util.UUID.randomUUID().toString();
+
+        // Create ticket object
+        TicketModel ticket = new TicketModel(ticketId, user, flight, seat, price);
+
+        // Save ticket to DB
+        TicketController.createTicket(ticket);
+
+        // Update seat status to booked
+        FlightSeatController.updateSeatStatus(flight.getId(), seat.getSeatId(), "Booked");
+
+        // Show confirmation
         StringBuilder message = new StringBuilder();
         message.append("🎫 Booking Successful!\n\n")
                .append("📅 Date: ").append(dateStr).append("\n")
@@ -248,7 +280,7 @@ public class BookingConfirmation {
                .append("🔢 Age: ").append(age).append("\n")
                .append("📞 Phone: ").append(phone).append("\n")
                .append("💺 Seat Class: ").append(seatClass).append("\n")
-               .append("💰 ").append(priceLabel.getText()).append("\n\n");
+               .append("💰 Price: $").append(price).append("\n\n");
 
         JOptionPane.showMessageDialog(null, message.toString(), "Booking Confirmation", JOptionPane.INFORMATION_MESSAGE);
 
@@ -256,7 +288,7 @@ public class BookingConfirmation {
 
     } catch (Exception e) {
         e.printStackTrace();
-        JOptionPane.showMessageDialog(null, "Date parsing failed.", "Error", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(null, "Date parsing or booking failed.", "Error", JOptionPane.ERROR_MESSAGE);
     }
 }
 

@@ -11,21 +11,6 @@ public class UserDAO {
         this.conn = conn;
     }
 
-    // Generate next user ID (e.g., U001, U002)
-    public String generateUserId() throws SQLException {
-        String sql = "SELECT Id FROM user ORDER BY Id DESC LIMIT 1";
-        try (PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                String lastId = rs.getString("Id"); // e.g., U023
-                int number = Integer.parseInt(lastId.substring(1)); // extract 23
-                return String.format("U%03d", number + 1); // U024
-            } else {
-                return "U001";
-            }
-        }
-    }
-
     public List<UserModel> getAllUser(String flightId) throws SQLException {
         List<UserModel> users = new ArrayList<>();
         String sql = "SELECT * FROM user WHERE Id IN (" +
@@ -49,11 +34,7 @@ public class UserDAO {
     }
 
     public UserModel createUser(UserModel user) throws SQLException {
-        // Generate new user ID
-        String newUserId = generateUserId();
-        user.setId(newUserId);
 
-        // SQL to insert new user
         String sql = "INSERT INTO user (Id, Date, FullName, Gender, Age, Phone) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

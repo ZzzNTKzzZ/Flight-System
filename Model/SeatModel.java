@@ -11,6 +11,10 @@ public class SeatModel {
         this.price = price;
     }
 
+    public SeatModel() {
+        //TODO Auto-generated constructor stub
+    }
+
     // Getters and setters
     public String getSeatId() {
         return seatId;

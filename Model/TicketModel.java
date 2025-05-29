@@ -16,6 +16,10 @@ public class TicketModel {
         this.price = price;
     }
 
+    public TicketModel() {
+        //TODO Auto-generated constructor stub
+    }
+
     // Getters and Setters
     public String getTicketId() {
         return ticketId;

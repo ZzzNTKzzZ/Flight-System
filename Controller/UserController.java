@@ -46,6 +46,7 @@ public class UserController {
         }
         return user;
     }
+
     public static void createUser(UserModel user) {
         try {
             Connection conn = DBConnection.getConnection();
@@ -55,6 +56,7 @@ public class UserController {
             e.printStackTrace();
         }
     }
+    
     public static void setUser(UserModel user) {
     try (Connection conn = DBConnection.getConnection()) {
         UserDAO userDAO = new UserDAO(conn);

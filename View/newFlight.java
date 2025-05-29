@@ -1,20 +1,22 @@
 package src.View;
 
 import javax.swing.*;
-import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.List;
 
 import src.main;
 import src.Controller.FlightController;
+import src.Controller.FlightSeatController;
+import src.Controller.SeatController;
 import src.Model.FlightModel;
+import src.Model.FlightSeatModel;
 import src.Model.FlightStatus;
+import src.Model.SeatModel;
 import src.View.FlightPage.FlightCurrentPage;
 
 public class NewFlight {
@@ -25,7 +27,7 @@ public class NewFlight {
     static {
         newFlightPage.setLayout(new BorderLayout());
         newFlightPage.setBackground(Color.WHITE);
-        newFlightPage.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50)); // padding around
+        newFlightPage.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50)); // padding
 
         JPanel backPanel = createBackPanel(() -> main.setCardLayout("home"));
 
@@ -41,7 +43,7 @@ public class NewFlight {
 
         newFlightPage.add(topPanel, BorderLayout.NORTH);
 
-        JPanel formPanel = new JPanel(new GridLayout(6, 2, 20, 20)); // changed rows to 6, removed status row
+        JPanel formPanel = new JPanel(new GridLayout(6, 2, 20, 20));
         formPanel.setBackground(Color.WHITE);
 
         String[] labels = {
@@ -109,8 +111,14 @@ public class NewFlight {
 
         submitButton.addActionListener(e -> {
             if (validateInputs()) {
-                // Collect data
                 String flightId = ((JTextField) inputFields.get("Flight ID:")).getText();
+
+                // Check if Flight ID already exists
+                if (FlightController.isFlightIdExist(flightId)) {
+                    showError("Flight ID '" + flightId + "' already exists. Please choose a different ID.");
+                    return;
+                }
+
                 String from = ((JTextField) inputFields.get("From:")).getText();
                 String to = ((JTextField) inputFields.get("To:")).getText();
 
@@ -123,16 +131,7 @@ public class NewFlight {
                 String seatsStr = ((JTextField) inputFields.get("Seats Available:")).getText();
                 int seatInt = Integer.parseInt(seatsStr);
 
-                System.out.println("Flight ID: " + flightId);
-                System.out.println("From: " + from);
-                System.out.println("To: " + to);
-                System.out.println("Departure: " + depDate + " " + depTime);
-                System.out.println("Arrival: " + arrDate + " " + arrTime);
-                System.out.println("Status: " + FlightStatus.Scheduled);
-                System.out.println("Seats Available: " + seatsStr);
-
                 SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-
                 Date departure = null;
                 Date arrival = null;
 
@@ -141,10 +140,47 @@ public class NewFlight {
                     arrival = formatter.parse(arrDate + " " + arrTime);
                 } catch (ParseException err) {
                     err.printStackTrace();
+                    showError("Date/time parsing error.");
+                    return;
                 }
 
-                FlightModel newFlight = new FlightModel(flightId, from, to, departure, arrival, FlightStatus.Scheduled, seatInt);
+                FlightModel newFlight = new FlightModel(flightId, from, to, departure, arrival, FlightStatus.Scheduled,
+                        seatInt);
                 FlightController.createNewFlights(newFlight);
+
+                List<SeatModel> seatList = new ArrayList<>();
+                List<FlightSeatModel> flightSeatList = new ArrayList<>();
+
+                String lastSeatId = SeatController.createSeatId(); // lấy id mới nhất
+                int baseNum = Integer.parseInt(lastSeatId.substring(1));
+
+                // 5 Economy seats
+                for (int i = 1; i <= 5; i++) {
+                    baseNum++;
+                    String seatId = String.format("S%03d", baseNum);
+                    seatList.add(new SeatModel(seatId, "economy", 100));
+                    flightSeatList.add(new FlightSeatModel(flightId, seatId, "Available"));
+                }
+
+                // 3 Business seats
+                for (int i = 1; i <= 3; i++) {
+                    baseNum++;
+                    String seatId = String.format("S%03d", baseNum);
+                    seatList.add(new SeatModel(seatId, "business", 250));
+                    flightSeatList.add(new FlightSeatModel(flightId, seatId, "Available"));
+                }
+
+                // 2 First Class seats
+                for (int i = 1; i <= 2; i++) {
+                    baseNum++;
+                    String seatId = String.format("S%03d", baseNum);
+                    seatList.add(new SeatModel(seatId, "first class", 500));
+                    flightSeatList.add(new FlightSeatModel(flightId, seatId, "Available"));
+                }
+
+                SeatController.createAllSeat(seatList);
+                FlightSeatController.createAllFlightSeat(flightSeatList);
+
                 FlightCurrentPage.refreshFlightList();
                 JOptionPane.showMessageDialog(newFlightPage, "Flight added successfully with status: Scheduled!");
             }
@@ -276,7 +312,6 @@ public class NewFlight {
         return panel;
     }
 
-    // Simple placeholder implementation for JTextField
     private static void addPlaceholder(JTextField textField, String placeholder) {
         textField.setForeground(Color.GRAY);
         textField.setText(placeholder);

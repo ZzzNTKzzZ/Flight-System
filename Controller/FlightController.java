@@ -63,14 +63,12 @@ public class FlightController {
 
     public static List<TripModel> searchFlight(String from, String to, String departure, String returnDate) {
         List<TripModel> flights = new ArrayList<>();
-        
-        // Trim and validate inputs
-        if (from == null || to == null || departure == null || returnDate == null ||
-                from.trim().isEmpty() || to.trim().isEmpty() ||
-                departure.trim().isEmpty() || returnDate.trim().isEmpty()) {
 
+        // Basic validation for mandatory fields
+        if (from == null || to == null || departure == null ||
+                from.trim().isEmpty() || to.trim().isEmpty() || departure.trim().isEmpty()) {
             JOptionPane.showMessageDialog(null,
-                    "All fields must be filled.",
+                    "From, To, and Departure date must be filled.",
                     "Input Error",
                     JOptionPane.WARNING_MESSAGE);
             return flights;
@@ -80,35 +78,41 @@ public class FlightController {
         SimpleDateFormat sdfSql = new SimpleDateFormat("yyyy-MM-dd"); // SQL format
         sdfInput.setLenient(false);
 
-        String depDateStr;
-        String retDateStr;
-
         try {
-            // Parse input strings to java.util.Date
+            // Parse departure date
             java.util.Date utilDepDate = sdfInput.parse(departure.trim());
-            java.util.Date utilRetDate = sdfInput.parse(returnDate.trim());
-
-            // Convert to java.sql.Date
             java.sql.Date depDate = new java.sql.Date(utilDepDate.getTime());
-            java.sql.Date retDate = new java.sql.Date(utilRetDate.getTime());
+            String depDateStr = sdfSql.format(depDate);
 
-            // Format to SQL-style string
-            depDateStr = sdfSql.format(depDate);
-            retDateStr = sdfSql.format(retDate);
+            String retDateStr = null;
+            boolean isRoundTrip = (returnDate != null && !returnDate.trim().isEmpty());
 
-            // Validate dates
-            if (!retDate.after(depDate)) {
-                JOptionPane.showMessageDialog(null,
-                        "Return date must be after departure date.",
-                        "Date Error",
-                        JOptionPane.WARNING_MESSAGE);
-                return flights;
+            if (isRoundTrip) {
+                // Parse and validate return date if provided
+                java.util.Date utilRetDate = sdfInput.parse(returnDate.trim());
+                java.sql.Date retDate = new java.sql.Date(utilRetDate.getTime());
+                retDateStr = sdfSql.format(retDate);
+
+                if (!retDate.after(depDate)) {
+                    JOptionPane.showMessageDialog(null,
+                            "Return date must be after departure date.",
+                            "Date Error",
+                            JOptionPane.WARNING_MESSAGE);
+                    return flights;
+                }
             }
 
-            // DB call inside same try block
+            // Get DB connection and DAO
             Connection conn = DBConnection.getConnection();
             FlightDAO flightDAO = new FlightDAO(conn);
-            flights = flightDAO.searchFlight(from.trim(), to.trim(), depDateStr, retDateStr);
+
+            if (isRoundTrip) {
+                // Search round-trip flights
+                flights = flightDAO.searchFlight(from.trim(), to.trim(), depDateStr, retDateStr);
+            } else {
+                // Search one-way flights only
+                flights = flightDAO.searchFlightOneWay(from.trim(), to.trim(), depDateStr);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -156,11 +160,22 @@ public class FlightController {
             Connection conn = DBConnection.getConnection();
             FlightDAO flightDAO = new FlightDAO(conn);
             flight = flightDAO.searchFlight(flightId);
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return flight;
     }
+
+    public static boolean isFlightIdExist(String flightId) {
+    try {
+        FlightModel flight = FlightController.getFlight(flightId);
+        return flight != null;
+    } catch (Exception e) {
+        e.printStackTrace();
+        // Optionally: return false or true here depending on how you want to handle exceptions
+        return false;
+    }
+}
 }

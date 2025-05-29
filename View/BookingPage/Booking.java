@@ -1,25 +1,9 @@
 package src.View.BookingPage;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
+import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.List;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 
 import src.main;
 import src.Controller.FlightController;
@@ -29,14 +13,16 @@ import src.View.FlightPage.FlightDetail;
 
 public class Booking {
     public static JPanel booking = new JPanel();
-    private static JPanel listPanel = new JPanel(); // container for cards
+    private static JPanel listPanel = new JPanel();
+    private static JComboBox<String> fromBox;
+    private static JComboBox<String> toBox;
 
     static {
         booking.setLayout(new BorderLayout());
         booking.setBackground(Color.WHITE);
         booking.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
 
-        // Top: Back button and title
+        // Top bar
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(Color.WHITE);
 
@@ -51,62 +37,61 @@ public class Booking {
         topPanel.add(title, BorderLayout.CENTER);
         booking.add(topPanel, BorderLayout.NORTH);
 
-        // Search Form
+        // Form
         JPanel form = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         form.setBackground(Color.WHITE);
 
-        String[] labels = { "From", "To", "Departure", "Return" };
+        String[] labels = {"From", "To", "Departure", "Return"};
         JComponent[] fields = new JComponent[labels.length];
 
+        // Fetch initial suggestions
         List<String> fromSuggestions = FlightController.getFlightFrom();
         List<String> toSuggestions = FlightController.getFligthTo();
 
         for (int i = 0; i < labels.length; i++) {
-            final int index = i; // Ensure effectively final for lambda
             JPanel pairPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
             pairPanel.setBackground(Color.WHITE);
 
             JLabel label = new JLabel(labels[i] + ":");
             label.setFont(new Font("Segoe UI", Font.PLAIN, 16));
 
-            if (index == 0) { // From
-                JComboBox<String> fromComboBox = new JComboBox<>(fromSuggestions.toArray(new String[0]));
-                fromComboBox.setPreferredSize(new Dimension(100, 25));
-                fromComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+            if (i == 0) {
+                fromBox = new JComboBox<>(fromSuggestions.toArray(new String[0]));
+                fromBox.setPreferredSize(new Dimension(100, 25));
+                fromBox.setFont(new Font("Segoe UI", Font.PLAIN, 16));
                 pairPanel.add(label);
-                pairPanel.add(fromComboBox);
-                form.add(pairPanel);
-                fields[index] = fromComboBox;
-            } else if (index == 1) { // To
-                JComboBox<String> toComboBox = new JComboBox<>(toSuggestions.toArray(new String[0]));
-                toComboBox.setPreferredSize(new Dimension(100, 25));
-                toComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+                pairPanel.add(fromBox);
+                fields[i] = fromBox;
+            } else if (i == 1) {
+                toBox = new JComboBox<>(toSuggestions.toArray(new String[0]));
+                toBox.setPreferredSize(new Dimension(100, 25));
+                toBox.setFont(new Font("Segoe UI", Font.PLAIN, 16));
                 pairPanel.add(label);
-                pairPanel.add(toComboBox);
-                form.add(pairPanel);
-                fields[index] = toComboBox;
+                pairPanel.add(toBox);
+                fields[i] = toBox;
             } else {
-                JTextField field = new JTextField(8);
-                field.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+                JTextField dateField = new JTextField(8);
+                dateField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
                 pairPanel.add(label);
-                pairPanel.add(field);
-                fields[index] = field;
-                form.add(pairPanel);
+                pairPanel.add(dateField);
+                fields[i] = dateField;
             }
+
+            form.add(pairPanel);
         }
 
         JButton searchButton = createSearchButton(fields);
         form.add(searchButton);
         booking.add(form, BorderLayout.CENTER);
 
-        // Result list panel
+        // List area
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
         listPanel.setBackground(Color.WHITE);
 
         JScrollPane scrollPane = new JScrollPane(listPanel);
         scrollPane.setPreferredSize(new Dimension(800, 300));
         scrollPane.setBorder(null);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16); // smoother scroll
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         booking.add(scrollPane, BorderLayout.SOUTH);
     }
@@ -125,12 +110,12 @@ public class Booking {
             String departure = ((JTextField) fields[2]).getText();
             String returnDate = ((JTextField) fields[3]).getText();
 
-            System.out.println("From: " + from + ", To: " + to + ", Departure: " + departure + ", Return: " + returnDate);
+            boolean isRoundTrip = returnDate != null && !returnDate.trim().isEmpty();
 
-            List<TripModel> trips = FlightController.searchFlight(from, to, departure, returnDate);
-            System.out.println(trips);
+            List<TripModel> trips = src.Controller.FlightController.searchFlight(from, to, departure, isRoundTrip ? returnDate : null);
+
             listPanel.removeAll();
-            updateListPanel(trips);
+            updateListPanel(trips, isRoundTrip);
             listPanel.revalidate();
             listPanel.repaint();
         });
@@ -138,7 +123,7 @@ public class Booking {
         return button;
     }
 
-    private static void updateListPanel(List<TripModel> trips) {
+    private static void updateListPanel(List<TripModel> trips, boolean isRoundTrip) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy HH:mm");
 
         for (TripModel trip : trips) {
@@ -153,36 +138,58 @@ public class Booking {
             tripCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 140));
 
             String infoHtml = "<html>" +
-                    "<b>Outbound Flight:</b> " + outbound.getFrom() + " → " + outbound.getTo() + "<br>" +
+                    "<b>Outbound:</b> " + outbound.getFrom() + " → " + outbound.getTo() + "<br>" +
                     "<b>Departure:</b> " + sdf.format(outbound.getDeparture()) + " | " +
-                    "<b>Arrival:</b> " + sdf.format(outbound.getArrival()) + "<br><br>" +
-                    "<b>Return Flight:</b> " + returnFlight.getFrom() + " → " + returnFlight.getTo() + "<br>" +
-                    "<b>Departure:</b> " + sdf.format(returnFlight.getDeparture()) + " | " +
-                    "<b>Arrival:</b> " + sdf.format(returnFlight.getArrival()) +
-                    "</html>";
+                    "<b>Arrival:</b> " + sdf.format(outbound.getArrival()) + "<br>";
+
+            if (isRoundTrip && returnFlight != null) {
+                infoHtml += "<br><b>Return:</b> " + returnFlight.getFrom() + " → " + returnFlight.getTo() + "<br>" +
+                        "<b>Departure:</b> " + sdf.format(returnFlight.getDeparture()) + " | " +
+                        "<b>Arrival:</b> " + sdf.format(returnFlight.getArrival());
+            }
+
+            infoHtml += "</html>";
 
             JLabel infoLabel = new JLabel(infoHtml);
             infoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
 
-            JButton bookingBtn = new JButton("Booking");
-            bookingBtn.setFocusPainted(false);
-            bookingBtn.setPreferredSize(new Dimension(120, 5));
-            bookingBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-            bookingBtn.setBackground(new Color(70, 130, 180));
-            bookingBtn.setForeground(Color.WHITE);
-            bookingBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            JButton bookButton = new JButton("Booking");
+            bookButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            bookButton.setBackground(new Color(70, 130, 180));
+            bookButton.setForeground(Color.WHITE);
+            bookButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            bookButton.setPreferredSize(new Dimension(120, 40));
 
-            bookingBtn.addActionListener(ev -> {
+            bookButton.addActionListener(ev -> {
                 FlightDetail.setOutboundFlight(outbound);
-                FlightDetail.setReturnFlight(returnFlight);
+                if (isRoundTrip) {
+                    FlightDetail.setReturnFlight(returnFlight);
+                } else {
+                    FlightDetail.setReturnFlight(null);
+                }
                 main.setCardLayout("flightDetail");
             });
 
             tripCard.add(infoLabel, BorderLayout.CENTER);
-            tripCard.add(bookingBtn, BorderLayout.EAST);
-
+            tripCard.add(bookButton, BorderLayout.EAST);
             listPanel.add(Box.createVerticalStrut(10));
             listPanel.add(tripCard);
+        }
+    }
+
+    // 🔄 Public method to refresh combo box contents
+    public static void refreshComboBoxes() {
+        List<String> newFrom = FlightController.getFlightFrom();
+        List<String> newTo = FlightController.getFligthTo();
+
+        fromBox.removeAllItems();
+        for (String from : newFrom) {
+            fromBox.addItem(from);
+        }
+
+        toBox.removeAllItems();
+        for (String to : newTo) {
+            toBox.addItem(to);
         }
     }
 }
